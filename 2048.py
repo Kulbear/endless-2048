@@ -3,13 +3,13 @@
 
 # Authors: Ji Yang <jyang7@ualberta.ca>
 # License: MIT
-# Version: 1.0.0
-# Last Updated: May 14, 2017
+# Version: 1.1.0
+# Last Updated: May 15, 2017
 
-import random
 import sys
+import csv
+import random
 from functools import reduce
-
 
 class Game2048:
     """The game 2048.
@@ -238,10 +238,13 @@ class Game2048:
         elif move == 3:
             self._vertically_merge(False)
 
-    def save_game_state(self):
+    def save_game_info(self):
         """Save the game info we need for further statistics"""
-        # TODO: Should save the current game score, the highest tile value achieved
-        pass
+        tiles = [item for sublist in self.board for item in sublist]
+        best_tile = max(tiles)
+        with open('result.csv', 'a', newline='\n') as f:
+            writer = csv.writer(f)
+            writer.writerow([self.score, best_tile])
 
     def is_lost(self):
         """Return True if the game is ended"""

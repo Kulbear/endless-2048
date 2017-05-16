@@ -3,13 +3,14 @@
 
 # Authors: Ji Yang <jyang7@ualberta.ca>
 # License: MIT
-# Version: 1.1.0
-# Last Updated: May 15, 2017
+# Version: 1.1.1
+# Last Updated: May 16, 2017
 
 import sys
 import csv
 import random
 from functools import reduce
+
 
 class Game2048:
     """The game 2048.
@@ -18,6 +19,8 @@ class Game2048:
 
     Parameters
     ----------
+    task_name : str
+        This string will be used as the filename of the result CSV which stores our game info
     upper_bound : int, optional (default=20)
         This value will be used for generating a mapping for beautiful print of game boards.
         If 20, we will generate a map(dict) contains key-value pair from '2': '2' to '524288': '524288'.
@@ -35,15 +38,18 @@ class Game2048:
         The game score.
     end : bool
         Whether the game is ended.
+    task_name : str
+        The filename of the file where we store the game info
     """
 
-    def __init__(self, upper_bound=20):
+    def __init__(self, task_name, upper_bound=20):
         assert upper_bound > 10
         self.row = 4
         self.col = 4
         self.board = self._generate_board()
         self.score = 0
         self.end = False
+        self.task_name = task_name
         self._moves = [0, 1, 2, 3]
         self._mapping = self._generate_mapping(upper_bound)
         self._fill_random_empty_tile()
@@ -76,10 +82,6 @@ class Game2048:
                     empty_tiles.append([y, x])
 
         return empty_tiles
-
-    def _get_num_empty_tiles(self):
-        """Get the number of empty tiles remain on the board"""
-        return len(self._get_empty_tiles())
 
     def _fill_random_empty_tile(self):
         """Randomly fill an empty tile with 2 or 4, prob 90% and 10%, respectively"""
@@ -121,7 +123,7 @@ class Game2048:
 
             return is_adjacent_equal(col)
 
-        if self._get_num_empty_tiles() != 0:
+        if self.get_num_empty_tiles() != 0:
             return True
 
         return check_all_rows_mergeable() or check_all_columns_mergeable()
@@ -225,6 +227,10 @@ class Game2048:
         if should_fill:
             self._fill_random_empty_tile()
 
+    def get_num_empty_tiles(self):
+        """Get the number of empty tiles remain on the board"""
+        return len(self._get_empty_tiles())
+
     def perform_move(self, move):
         """Perform a move on the game board"""
         assert move in self._moves
@@ -238,13 +244,17 @@ class Game2048:
         elif move == 3:
             self._vertically_merge(False)
 
+        self.end = not self._is_mergeable()
+
     def save_game_info(self):
         """Save the game info we need for further statistics"""
         tiles = [item for sublist in self.board for item in sublist]
         best_tile = max(tiles)
-        with open('result.csv', 'a', newline='\n') as f:
+        with open('{}.csv'.format(self.task_name), 'a', newline='\n') as f:
             writer = csv.writer(f)
             writer.writerow([self.score, best_tile])
+
+        return self.score, best_tile
 
     def is_lost(self):
         """Return True if the game is ended"""
@@ -264,8 +274,7 @@ class Game2048:
                 print(self._mapping[str(entry)].center(4, ' '), end=' ')
             print('|')
         print('{}-'.format('------' * self.col))
-        print('Score: {}\nEmpty Tiles: {}'.format(
-            self.score, self._get_num_empty_tiles()))
+        print('Score: {}\nEmpty Tiles: {}'.format(self.score, self.get_num_empty_tiles()))
         print('{}-'.format('------' * self.col))
 
 

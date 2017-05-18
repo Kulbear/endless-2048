@@ -13,7 +13,7 @@ from functools import reduce
 
 
 class Game2048:
-    """The game 2048.
+    """The 2048 game.
 
     Each instance is a unique 2048 game that can be used for training our model later on.
 

@@ -51,9 +51,44 @@ class Game2048:
         self.end = False
         self.task_name = task_name
         self._moves = [0, 1, 2, 3]
+        self._player_1 = 'Agent'
+        self._player_2 = 'Computer'
+        self._active_player = self._player_1
+        self._inactive_player = self._player_2
         self._mapping = self._generate_mapping(upper_bound)
         self._fill_random_empty_tile()
         self._fill_random_empty_tile()
+
+    def __hash__(self):
+        return str(self.board).__hash__()
+
+    @property
+    def active_player(self):
+        """The player that plays on this turn"""
+        return self._active_player
+
+    @property
+    def inactive_player(self):
+        """The player that doesn't play on this turn"""
+        return self._inactive_player
+
+    def get_opponent(self, player):
+        """Return the opponent player"""
+        return self._active_player if player == self._inactive_player else self._inactive_player
+
+    def copy(self):
+        """Return a deep copy of the current game state"""
+        new_game = Game2048(self.task_name)
+        new_game.row = self.row
+        new_game.col = self.col
+        new_game.board = self.board
+        new_game.score = self.score
+        new_game.end = self.end
+        new_game.task_name = self.task_name
+        new_game._active_player = self._active_player
+        new_game._inactive_player = self._inactive_player
+
+        return new_game
 
     def _is_empty_tile(self, tile):
         """Return whether the given tile is empty"""
@@ -297,7 +332,7 @@ def request_move():
 
 if __name__ == '__main__':
     global game
-    game = Game2048()
+    game = Game2048('Just Play')
     while True:
         game.print_game()
         if game.is_lost():

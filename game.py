@@ -3,8 +3,8 @@
 
 # Authors: Ji Yang <jyang7@ualberta.ca>
 # License: MIT
-# Version: 1.1.1
-# Last Updated: May 16, 2017
+# Version: 1.1.2
+# Last Updated: May 22, 2017
 
 import sys
 import csv
@@ -269,7 +269,7 @@ class Game2048:
     def perform_move(self, move):
         """Perform a move on the game board"""
         assert move in self._moves
-        # 0 for UP, 1 for DOWN, 2 for LEFT, 3 for RIGHT
+        # 0 for LEFT, 1 for RIGHT, 2 for UP, 3 for DOWN
         if move == 0:
             self._horizontally_merge(True)
         elif move == 1:

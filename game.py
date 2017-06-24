@@ -3,8 +3,8 @@
 
 # Authors: Ji Yang <jyang7@ualberta.ca>
 # License: MIT
-# Version: 1.1.2
-# Last Updated: May 22, 2017
+# Version: 1.2.0
+# Last Updated: June 24, 2017
 
 import sys
 import csv

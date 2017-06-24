@@ -3,8 +3,8 @@
 
 # Authors: Ji Yang <jyang7@ualberta.ca>
 # License: MIT
-# Version: 1.1.1
-# Last Updated: May 16, 2017
+# Version: 1.2.0
+# Last Updated: June 24, 2017
 
 import sys
 import csv
@@ -42,7 +42,7 @@ class Game2048:
         The filename of the file where we store the game info
     """
 
-    def __init__(self, task_name, upper_bound=20):
+    def __init__(self, task_name="Default_Game", game_mode=True, upper_bound=20):
         assert upper_bound > 10
         self.row = 4
         self.col = 4
@@ -50,10 +50,51 @@ class Game2048:
         self.score = 0
         self.end = False
         self.task_name = task_name
+        self.prev_board = [i for i in self.board]
+        self.game_mode = game_mode
         self._moves = [0, 1, 2, 3]
+        self._player_1 = 'Agent'
+        self._player_2 = 'Computer'
+        self._active_player = self._player_1
+        self._inactive_player = self._player_2
         self._mapping = self._generate_mapping(upper_bound)
         self._fill_random_empty_tile()
         self._fill_random_empty_tile()
+
+    def __hash__(self):
+        return str(self.board).__hash__()
+
+    @property
+    def active_player(self):
+        """The player that plays on this turn"""
+        return self._active_player
+
+    @property
+    def inactive_player(self):
+        """The player that doesn't play on this turn"""
+        return self._inactive_player
+
+    def _switch_player(self):
+        """Switch players' turn"""
+        self._active_player, self._inactive_player = self._inactive_player, self._active_player
+
+    def get_opponent(self, player):
+        """Return the opponent player"""
+        return self._active_player if player == self._inactive_player else self._inactive_player
+
+    def copy(self):
+        """Return a deep copy of the current game state"""
+        new_game = Game2048(self.task_name)
+        new_game.row = self.row
+        new_game.col = self.col
+        new_game.board = self.board
+        new_game.score = self.score
+        new_game.end = self.end
+        new_game.task_name = self.task_name
+        new_game._active_player = self._active_player
+        new_game._inactive_player = self._inactive_player
+
+        return new_game
 
     def _is_empty_tile(self, tile):
         """Return whether the given tile is empty"""
@@ -82,6 +123,15 @@ class Game2048:
                     empty_tiles.append([y, x])
 
         return empty_tiles
+
+    def moves_available(self):
+        """Get available moves under the current game state"""
+        available = []
+        for move in self._moves:
+            grid_copy = self.copy()
+            if grid_copy.perform_move(move):
+                available.append(move)
+        return available
 
     def _fill_random_empty_tile(self):
         """Randomly fill an empty tile with 2 or 4, prob 90% and 10%, respectively"""
@@ -166,7 +216,7 @@ class Game2048:
             # To the right/bottom
             else:
                 result[-1] = store[0]
-            return result, not arr == result
+            return result
 
         # Reverse if we are performing a right/downward merge
         if not direction:
@@ -191,20 +241,13 @@ class Game2048:
         while len(store) < len(arr):
             store.append(0) if direction else store.insert(0, 0)
 
-        return store, not arr == store
+        return store
 
     def _horizontally_merge(self, direction):
         """Merge all rows"""
         # Set a flag to tell whether we need to fill an empty tile
-        should_fill = False
         for i in range(0, len(self.board)):
-            self.board[i], changed = self._merge(self.board[i], direction)
-            # If there is any row has been changed after a merge
-            if changed:
-                should_fill = True
-        # Fill an empty tile if this merge changes the game state
-        if should_fill:
-            self._fill_random_empty_tile()
+            self.board[i] = self._merge(self.board[i], direction)
 
     def _vertically_merge(self, direction):
         """Merge all columns"""
@@ -214,18 +257,11 @@ class Game2048:
             for row_idx in range(len(self.board)):
                 self.board[row_idx][idx] = col[row_idx]
 
-        # Set a flag to tell whether we need to fill an empty tile
-        should_fill = False
         for col_idx in range(self.col):
             # Construct columns
             column = [i[col_idx] for i in self.board]
-            merged_column, changed = self._merge(column, direction)
-            # If there is any column has been changed after a merge
-            if changed:
-                should_fill = True
+            merged_column = self._merge(column, direction)
             update_column_by_index(col_idx, merged_column)
-        if should_fill:
-            self._fill_random_empty_tile()
 
     def get_num_empty_tiles(self):
         """Get the number of empty tiles remain on the board"""
@@ -233,18 +269,28 @@ class Game2048:
 
     def perform_move(self, move):
         """Perform a move on the game board"""
-        assert move in self._moves
-        # 0 for UP, 1 for DOWN, 2 for LEFT, 3 for RIGHT
-        if move == 0:
-            self._horizontally_merge(True)
-        elif move == 1:
-            self._horizontally_merge(False)
-        elif move == 2:
-            self._vertically_merge(True)
-        elif move == 3:
-            self._vertically_merge(False)
+
+        if self._active_player == 'Computer' and len(self._get_empty_tiles()) > 0:
+            self._fill_random_empty_tile()
+        else:
+            # 0 for LEFT, 1 for RIGHT, 2 for UP, 3 for DOWN
+            if move == 0:
+                self._horizontally_merge(True)
+            elif move == 1:
+                self._horizontally_merge(False)
+            elif move == 2:
+                self._vertically_merge(True)
+            elif move == 3:
+                self._vertically_merge(False)
 
         self.end = not self._is_mergeable()
+        self._switch_player()
+        changed = self.prev_board != self.board
+        self.prev_board = [i for i in self.board]
+        # Fill an empty tile if this merge changes the game state
+        if self.game_mode and changed:
+            self._fill_random_empty_tile()
+        return changed
 
     def save_game_info(self):
         """Save the game info we need for further statistics"""

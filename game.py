@@ -118,6 +118,15 @@ class Game2048:
 
         return empty_tiles
 
+    def moves_available(self):
+        """Get available moves under the current game state"""
+        available = []
+        for move in self._moves:
+            grid_copy = self.copy()
+            if grid_copy.perform_move(move):
+                available.append(move)
+        return available
+
     def _fill_random_empty_tile(self):
         """Randomly fill an empty tile with 2 or 4, prob 90% and 10%, respectively"""
         empty_tiles = self._get_empty_tiles()

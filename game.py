@@ -3,11 +3,12 @@
 
 # Authors: Ji Yang <jyang7@ualberta.ca>
 # License: MIT
-# Version: 1.2.0
-# Last Updated: June 24, 2017
+# Version: 2.0.0
+# Last Updated: July 3, 2017
 
 import sys
 import csv
+import copy
 import random
 from functools import reduce
 
@@ -50,7 +51,6 @@ class Game2048:
         self.score = 0
         self.end = False
         self.task_name = task_name
-        self.prev_board = [i for i in self.board]
         self.game_mode = game_mode
         self._moves = [0, 1, 2, 3]
         self._player_1 = 'Agent'
@@ -60,6 +60,8 @@ class Game2048:
         self._mapping = self._generate_mapping(upper_bound)
         self._fill_random_empty_tile()
         self._fill_random_empty_tile()
+        # NOTE: Save the previous board **HERE** instead of the previous position
+        self.prev_board = copy.deepcopy(self.board)
 
     def __hash__(self):
         return str(self.board).__hash__()
@@ -87,7 +89,9 @@ class Game2048:
         new_game = Game2048(self.task_name)
         new_game.row = self.row
         new_game.col = self.col
-        new_game.board = self.board
+        new_game.prev_board = copy.deepcopy(self.prev_board)
+        new_game.board = copy.deepcopy(self.board)
+        new_game.game_mode = self.game_mode
         new_game.score = self.score
         new_game.end = self.end
         new_game.task_name = self.task_name
@@ -129,7 +133,8 @@ class Game2048:
         available = []
         for move in self._moves:
             grid_copy = self.copy()
-            if grid_copy.perform_move(move):
+            changed = grid_copy.perform_move(move)
+            if changed:
                 available.append(move)
         return available
 
@@ -245,7 +250,6 @@ class Game2048:
 
     def _horizontally_merge(self, direction):
         """Merge all rows"""
-        # Set a flag to tell whether we need to fill an empty tile
         for i in range(0, len(self.board)):
             self.board[i] = self._merge(self.board[i], direction)
 
@@ -267,8 +271,9 @@ class Game2048:
         """Get the number of empty tiles remain on the board"""
         return len(self._get_empty_tiles())
 
-    def perform_move(self, move):
+    def perform_move(self, move=None):
         """Perform a move on the game board"""
+        self.prev_board = copy.deepcopy(self.board)
 
         if self._active_player == 'Computer' and len(self._get_empty_tiles()) > 0:
             self._fill_random_empty_tile()
@@ -285,11 +290,13 @@ class Game2048:
 
         self.end = not self._is_mergeable()
         self._switch_player()
+
         changed = self.prev_board != self.board
-        self.prev_board = [i for i in self.board]
         # Fill an empty tile if this merge changes the game state
         if self.game_mode and changed:
             self._fill_random_empty_tile()
+            self._switch_player()
+
         return changed
 
     def save_game_info(self):

@@ -5,5 +5,4 @@ class RandomAgent(BaseAgent):
     """A game agent pick the next move randomly."""
     def get_move(self, game):
         assert game.active_player == 'Agent'
-        move = choice(game.moves_available())
-        return move
+        return self.random_move(game)

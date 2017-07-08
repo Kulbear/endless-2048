@@ -42,8 +42,10 @@ class Game2048:
     task_name : str
         The filename of the file where we store the game info
     """
+    agent = 'Agent'
+    computer = 'Computer'
 
-    def __init__(self, task_name="Default_Game", game_mode=True, upper_bound=20):
+    def __init__(self, task_name='Default_Game', game_mode=True, upper_bound=20):
         assert upper_bound > 10
         self.row = 4
         self.col = 4
@@ -53,8 +55,8 @@ class Game2048:
         self.task_name = task_name
         self.game_mode = game_mode
         self._moves = [0, 1, 2, 3]
-        self._player_1 = 'Agent'
-        self._player_2 = 'Computer'
+        self._player_1 = Game2048.agent
+        self._player_2 = Game2048.computer
         self._active_player = self._player_1
         self._inactive_player = self._player_2
         self._mapping = self._generate_mapping(upper_bound)
@@ -76,7 +78,7 @@ class Game2048:
         """The player that doesn't play on this turn"""
         return self._inactive_player
 
-    def _switch_player(self):
+    def switch_player(self):
         """Switch players' turn"""
         self._active_player, self._inactive_player = self._inactive_player, self._active_player
 
@@ -120,6 +122,17 @@ class Game2048:
 
     def _get_empty_tiles(self):
         """Get coordinates of all empty tiles(in format of [col, row])"""
+        empty_tiles = []
+        for y in range(self.row):
+            for x in range(self.col):
+                if self._is_empty_tile(self.board[y][x]):
+                    empty_tiles.append([y, x])
+
+        return empty_tiles
+
+    def empty_tiles(self):
+        """Get coordinates of all empty tiles(in format of [col, row])"""
+        # TODO: this is identical to self._get_empty_tiles, refactor this
         empty_tiles = []
         for y in range(self.row):
             for x in range(self.col):
@@ -289,13 +302,13 @@ class Game2048:
                 self._vertically_merge(False)
 
         self.end = not self._is_mergeable()
-        self._switch_player()
+        self.switch_player()
 
         changed = self.prev_board != self.board
         # Fill an empty tile if this merge changes the game state
         if self.game_mode and changed:
             self._fill_random_empty_tile()
-            self._switch_player()
+            self.switch_player()
 
         return changed
 

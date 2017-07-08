@@ -1,4 +1,5 @@
 from .base_agent import BaseAgent
+from game import Game2048
 
 MAX_TILE_CREDIT = 10e3
 MAX_DEPTH = 4
@@ -9,12 +10,59 @@ WEIGHT_MATRIX = [
     [4, 2, 1, 1]
 ]
 
+AGENT = Game2048.agent
+COMPUTER = Game2048.computer
+
 
 class MinimaxAgent(BaseAgent):
     def get_move(self, game):
-        return NotImplementedError
+        board = game.board
+        available = game.moves_available()
+        max_move = available[0] if available else None
+        max_score = float('-inf')
 
-    def search(self, grid, alpha, beta, depth, turn, max_depth):
+        for d in range(1, MAX_DEPTH):
+            move, score = self.search(game, float('-inf'), float('inf'), 1, 0, d)
+            if score > max_score:
+                max_score = score
+                max_move = move
+        return max_move
+
+    def search(self, game, alpha, beta, depth, turn, max_depth):
+        if depth > max_depth or game.is_lost():
+            return self.evaluate(game)
+        # Agent's turn
+        if game.active_player == AGENT:
+            moves = game.moves_available()
+            result_move = moves[0]
+            v = float('-inf')
+            for m in moves:
+                game_copy = game.copy()
+                game_copy.perform_move(m)
+                prev_v = v
+                v = max(v, self.search(game_copy, alpha, beta, depth + 1, 1 - turn, max_depth))
+                if v > prev_v and depth == 1:
+                    result_move = m
+                if v >= beta:
+                    return v
+                alpha = max(alpha, v)
+            if depth == 1:
+                return result_move, v
+            return v
+        else:
+            available_tiles = game.empty_tiles()
+            v = float('inf')
+            for t in available_tiles:
+                game_copy = game.copy()
+                # TODO: for simplicity here we only consider filling 2
+                game_copy.board[t[0]][t[1]] = 2
+                game_copy.switch_player()
+                v = min(v, self.search(game_copy, alpha, beta, depth + 1, 1 - turn, max_depth))
+                if v <= alpha:
+                    return v
+                beta = min(beta, v)
+
+    def evaluate(self):
         return NotImplementedError
 
     def empty_tiles(self, game):

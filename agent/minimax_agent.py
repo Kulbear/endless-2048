@@ -1,12 +1,46 @@
 from .base_agent import BaseAgent
 
+MAX_TILE_CREDIT = 10e3
+MAX_DEPTH = 4
+WEIGHT_MATRIX = [
+    [2048, 1024, 64, 32],
+    [512, 128, 16, 2],
+    [256, 8, 2, 1],
+    [4, 2, 1, 1]
+]
+
+
 class MinimaxAgent(BaseAgent):
     def get_move(self, game):
-        assert game.active_player == 'Agent'
+        return NotImplementedError
+
+    def search(self, grid, alpha, beta, depth, turn, max_depth):
         return NotImplementedError
 
     def empty_tiles(self, game):
         return game.get_num_empty_tiles()
+
+    def max_tile_position(self, game):
+        board = game.board
+        max_tile = max(max(board, key=lambda x: max(x)))
+
+        # Considered with the WEIGHT_MATRIX, always keep the max tile in the corner
+        if board[0][0] == max_tile:
+            return MAX_TILE_CREDIT
+        else:
+            return -MAX_TILE_CREDIT
+
+    def weighted_board(self, game):
+        # TODO: try numpy matrix?
+        board = game.board
+
+        result = 0
+        for i in range(len(board)):
+            for j in range(len(board)):
+                result += board[i][j] * WEIGHT_MATRIX[i][j]
+
+        # Larger result means better
+        return result
 
     def smoothness(self, game):
         board = game.board
@@ -22,5 +56,5 @@ class MinimaxAgent(BaseAgent):
 
         return smoothness
 
-    def monoticity(self, game):
+    def monotonicity(self, game):
         return NotImplementedError

@@ -1,9 +1,7 @@
-
 from agent import base_agent
-from .. import game
 
-MAX_TILE_CREDIT = 10e3
-MAX_DEPTH = 4
+MAX_TILE_CREDIT = 10e4
+MAX_DEPTH = 2
 WEIGHT_MATRIX = [
     [2048, 1024, 64, 32],
     [512, 128, 16, 2],
@@ -12,20 +10,17 @@ WEIGHT_MATRIX = [
 ]
 
 BaseAgent = base_agent.BaseAgent
-GameClass = game.Game2048
-AGENT = GameClass.agent
-COMPUTER = GameClass.computer
+AGENT = 'Agent'
 
 
 class MinimaxAgent(BaseAgent):
     def get_move(self, game):
-        board = game.board
         available = game.moves_available()
         max_move = available[0] if available else None
         max_score = float('-inf')
 
         for d in range(1, MAX_DEPTH):
-            move, score = self.search(game, float('-inf'), float('inf'), 1, 0, d)
+            move, score = self.search(game, float('-inf'), float('inf'), 1, d)
             if score > max_score:
                 max_score = score
                 max_move = move
@@ -66,6 +61,9 @@ class MinimaxAgent(BaseAgent):
                 if v <= alpha:
                     return v
                 beta = min(beta, v)
+            if depth == 1:
+                return '', v
+            return v
 
     def evaluate(self, game):
         empty = self.empty_tiles(game)

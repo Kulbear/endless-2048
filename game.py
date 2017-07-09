@@ -156,7 +156,9 @@ class Game2048:
         empty_tiles = self._get_empty_tiles()
         if empty_tiles:
             [i, j] = random.choice(empty_tiles)
-            self.board[i][j] = 4 if random.random() > 0.9 else 2
+            # TODO: for simplicity, we only fill 2 now
+            # self.board[i][j] = 4 if random.random() > 0.9 else 2
+            self.board[i][j] = 2
 
     def _is_mergeable(self):
         """Return whether there exists at least one pair of tiles is mergeable"""

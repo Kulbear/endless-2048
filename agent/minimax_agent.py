@@ -1,5 +1,6 @@
-from .base_agent import BaseAgent
-from game import Game2048
+
+from agent import base_agent
+from .. import game
 
 MAX_TILE_CREDIT = 10e3
 MAX_DEPTH = 4
@@ -10,8 +11,10 @@ WEIGHT_MATRIX = [
     [4, 2, 1, 1]
 ]
 
-AGENT = Game2048.agent
-COMPUTER = Game2048.computer
+BaseAgent = base_agent.BaseAgent
+GameClass = game.Game2048
+AGENT = GameClass.agent
+COMPUTER = GameClass.computer
 
 
 class MinimaxAgent(BaseAgent):
@@ -102,7 +105,8 @@ class MinimaxAgent(BaseAgent):
     def smoothness(self, game):
         board = game.board
         smoothness = 0
-        row, col = len(board), len(board[0])
+
+        row, col = len(board), len(board[0]) if len(board) > 0 else 0
         for r in board:
             for i in range(col - 1):
                 smoothness += abs(r[i] - r[i + 1])
@@ -114,4 +118,22 @@ class MinimaxAgent(BaseAgent):
         return smoothness
 
     def monotonicity(self, game):
-        return NotImplementedError
+        board = game.board
+        mono = 0
+
+        row, col = len(board), len(board[0]) if len(board) > 0 else 0
+        for r in board:
+            diff = r[0] - r[1]
+            for i in range(col - 1):
+                if (r[i] - r[i + 1]) * diff <= 0:
+                    mono += 1
+                diff = r[i] - r[i + 1]
+
+        for j in range(row):
+            diff = board[0][j] - board[1][j]
+            for k in range(col - 1):
+                if (board[k][j] - board[k + 1][j]) * diff <= 0:
+                    mono += 1
+                diff = board[k][j] - board[k + 1][j]
+
+        return mono

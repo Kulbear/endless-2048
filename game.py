@@ -159,7 +159,7 @@ class Game2048:
             self.board[i][j] = 4 if random.random() > 0.9 else 2
 
     def _is_mergeable(self):
-        """Return whether there exists tiles are mergeable"""
+        """Return whether there exists at least one pair of tiles is mergeable"""
 
         def is_adjacent_equal(arr):
             """Return whether there exists adjacent tiles have an identical value"""
@@ -179,7 +179,11 @@ class Game2048:
                 for i in self.board[row_idx]:
                     if i != 0:
                         row.append(i)
-            return is_adjacent_equal(row)
+
+                if is_adjacent_equal(row):
+                    return True
+
+            return False
 
         def check_all_columns_mergeable():
             """Check mergebility for each column"""
@@ -189,7 +193,10 @@ class Game2048:
                     if i[col_idx] != 0:
                         col.append(i[col_idx])
 
-            return is_adjacent_equal(col)
+                if is_adjacent_equal(col):
+                    return True
+
+            return False
 
         if self.get_num_empty_tiles() != 0:
             return True

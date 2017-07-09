@@ -28,7 +28,7 @@ class MinimaxAgent(BaseAgent):
                 max_move = move
         return max_move
 
-    def search(self, game, alpha, beta, depth, turn, max_depth):
+    def search(self, game, alpha, beta, depth, max_depth):
         if depth > max_depth or game.is_lost():
             return self.evaluate(game)
         # Agent's turn
@@ -40,7 +40,7 @@ class MinimaxAgent(BaseAgent):
                 game_copy = game.copy()
                 game_copy.perform_move(m)
                 prev_v = v
-                v = max(v, self.search(game_copy, alpha, beta, depth + 1, 1 - turn, max_depth))
+                v = max(v, self.search(game_copy, alpha, beta, depth + 1, max_depth))
                 if v > prev_v and depth == 1:
                     result_move = m
                 if v >= beta:
@@ -52,18 +52,27 @@ class MinimaxAgent(BaseAgent):
         else:
             available_tiles = game.empty_tiles()
             v = float('inf')
-            for t in available_tiles:
+            for tile in available_tiles:
                 game_copy = game.copy()
-                # TODO: for simplicity here we only consider filling 2
-                game_copy.board[t[0]][t[1]] = 2
+                # TODO: for simplicity here we only consider to fill 2
+                i, j = tile
+                game_copy.board[i][j] = 2
+                # Switch player here
                 game_copy.switch_player()
-                v = min(v, self.search(game_copy, alpha, beta, depth + 1, 1 - turn, max_depth))
+                v = min(v, self.search(game_copy, alpha, beta, depth + 1, max_depth))
                 if v <= alpha:
                     return v
                 beta = min(beta, v)
 
-    def evaluate(self):
-        return NotImplementedError
+    def evaluate(self, game):
+        empty = self.empty_tiles(game)
+        position = self.max_tile_position(game)
+        weighted_sum = self.weighted_board(game)
+        smooth = self.smoothness(game)
+        mono = self.monotonicity(game)
+
+        # TODO: should use weights to measure heuristics
+        return empty + position + weighted_sum + smooth + mono
 
     def empty_tiles(self, game):
         return game.get_num_empty_tiles()

@@ -321,13 +321,13 @@ class Game2048:
 
         return changed
 
-    def save_game_info(self):
+    def save_game_info(self, step=None, time_cost=None):
         """Save the game info we need for further statistics"""
         tiles = [item for sublist in self.board for item in sublist]
         best_tile = max(tiles)
         with open('{}.csv'.format(self.task_name), 'a', newline='\n') as f:
             writer = csv.writer(f)
-            writer.writerow([self.score, best_tile])
+            writer.writerow([self.score, best_tile, step, time_cost])
 
         return self.score, best_tile
 

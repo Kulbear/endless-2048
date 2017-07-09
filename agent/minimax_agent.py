@@ -1,7 +1,7 @@
 from agent import base_agent
 
 MAX_TILE_CREDIT = 10e4
-MAX_DEPTH = 2
+MAX_DEPTH = 1
 WEIGHT_MATRIX = [
     [2048, 1024, 64, 32],
     [512, 128, 16, 2],

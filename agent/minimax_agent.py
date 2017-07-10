@@ -1,7 +1,7 @@
 from agent import base_agent
 
 MAX_TILE_CREDIT = 10e4
-MAX_DEPTH = 1
+MAX_DEPTH = 8  # 8 gives a 50% rate of achieving 2048 within half an hour
 WEIGHT_MATRIX = [
     [2048, 1024, 64, 32],
     [512, 128, 16, 2],
@@ -19,16 +19,20 @@ class MinimaxAgent(BaseAgent):
         max_move = available[0] if available else None
         max_score = float('-inf')
 
+        # TODO: do we really need iterative deepening or not?
+        # Iterative deepening
         for d in range(1, MAX_DEPTH):
             move, score = self.search(game, float('-inf'), float('inf'), 1, d)
             if score > max_score:
                 max_score = score
                 max_move = move
+
         return max_move
 
     def search(self, game, alpha, beta, depth, max_depth):
         if depth > max_depth or game.is_lost():
             return self.evaluate(game)
+
         # Agent's turn
         if game.active_player == AGENT:
             moves = game.moves_available()
@@ -44,6 +48,7 @@ class MinimaxAgent(BaseAgent):
                 if v >= beta:
                     return v
                 alpha = max(alpha, v)
+
             if depth == 1:
                 return result_move, v
             return v
@@ -61,6 +66,7 @@ class MinimaxAgent(BaseAgent):
                 if v <= alpha:
                     return v
                 beta = min(beta, v)
+
             if depth == 1:
                 return '', v
             return v

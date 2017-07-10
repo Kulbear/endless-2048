@@ -3,11 +3,12 @@
 
 # Authors: Ji Yang <jyang7@ualberta.ca>
 # License: MIT
-# Version: 1.2.0
-# Last Updated: June 24, 2017
+# Version: 2.0.0
+# Last Updated: July 3, 2017
 
 import sys
 import csv
+import copy
 import random
 from functools import reduce
 
@@ -41,8 +42,10 @@ class Game2048:
     task_name : str
         The filename of the file where we store the game info
     """
+    agent = 'Agent'
+    computer = 'Computer'
 
-    def __init__(self, task_name="Default_Game", game_mode=True, upper_bound=20):
+    def __init__(self, task_name='Default_Game', game_mode=True, upper_bound=20):
         assert upper_bound > 10
         self.row = 4
         self.col = 4
@@ -50,16 +53,17 @@ class Game2048:
         self.score = 0
         self.end = False
         self.task_name = task_name
-        self.prev_board = [i for i in self.board]
         self.game_mode = game_mode
         self._moves = [0, 1, 2, 3]
-        self._player_1 = 'Agent'
-        self._player_2 = 'Computer'
+        self._player_1 = Game2048.agent
+        self._player_2 = Game2048.computer
         self._active_player = self._player_1
         self._inactive_player = self._player_2
         self._mapping = self._generate_mapping(upper_bound)
         self._fill_random_empty_tile()
         self._fill_random_empty_tile()
+        # NOTE: Save the previous board **HERE** instead of the previous position
+        self.prev_board = copy.deepcopy(self.board)
 
     def __hash__(self):
         return str(self.board).__hash__()
@@ -74,7 +78,7 @@ class Game2048:
         """The player that doesn't play on this turn"""
         return self._inactive_player
 
-    def _switch_player(self):
+    def switch_player(self):
         """Switch players' turn"""
         self._active_player, self._inactive_player = self._inactive_player, self._active_player
 
@@ -87,7 +91,9 @@ class Game2048:
         new_game = Game2048(self.task_name)
         new_game.row = self.row
         new_game.col = self.col
-        new_game.board = self.board
+        new_game.prev_board = copy.deepcopy(self.prev_board)
+        new_game.board = copy.deepcopy(self.board)
+        new_game.game_mode = self.game_mode
         new_game.score = self.score
         new_game.end = self.end
         new_game.task_name = self.task_name
@@ -124,12 +130,24 @@ class Game2048:
 
         return empty_tiles
 
+    def empty_tiles(self):
+        """Get coordinates of all empty tiles(in format of [col, row])"""
+        # TODO: this is identical to self._get_empty_tiles, refactor this
+        empty_tiles = []
+        for y in range(self.row):
+            for x in range(self.col):
+                if self._is_empty_tile(self.board[y][x]):
+                    empty_tiles.append([y, x])
+
+        return empty_tiles
+
     def moves_available(self):
         """Get available moves under the current game state"""
         available = []
         for move in self._moves:
             grid_copy = self.copy()
-            if grid_copy.perform_move(move):
+            changed = grid_copy.perform_move(move)
+            if changed:
                 available.append(move)
         return available
 
@@ -138,10 +156,12 @@ class Game2048:
         empty_tiles = self._get_empty_tiles()
         if empty_tiles:
             [i, j] = random.choice(empty_tiles)
-            self.board[i][j] = 4 if random.random() > 0.9 else 2
+            # TODO: for simplicity, we only fill 2 now
+            # self.board[i][j] = 4 if random.random() > 0.9 else 2
+            self.board[i][j] = 2
 
     def _is_mergeable(self):
-        """Return whether there exists tiles are mergeable"""
+        """Return whether there exists at least one pair of tiles is mergeable"""
 
         def is_adjacent_equal(arr):
             """Return whether there exists adjacent tiles have an identical value"""
@@ -161,7 +181,11 @@ class Game2048:
                 for i in self.board[row_idx]:
                     if i != 0:
                         row.append(i)
-            return is_adjacent_equal(row)
+
+                if is_adjacent_equal(row):
+                    return True
+
+            return False
 
         def check_all_columns_mergeable():
             """Check mergebility for each column"""
@@ -171,7 +195,10 @@ class Game2048:
                     if i[col_idx] != 0:
                         col.append(i[col_idx])
 
-            return is_adjacent_equal(col)
+                if is_adjacent_equal(col):
+                    return True
+
+            return False
 
         if self.get_num_empty_tiles() != 0:
             return True
@@ -245,7 +272,6 @@ class Game2048:
 
     def _horizontally_merge(self, direction):
         """Merge all rows"""
-        # Set a flag to tell whether we need to fill an empty tile
         for i in range(0, len(self.board)):
             self.board[i] = self._merge(self.board[i], direction)
 
@@ -267,8 +293,9 @@ class Game2048:
         """Get the number of empty tiles remain on the board"""
         return len(self._get_empty_tiles())
 
-    def perform_move(self, move):
+    def perform_move(self, move=None):
         """Perform a move on the game board"""
+        self.prev_board = copy.deepcopy(self.board)
 
         if self._active_player == 'Computer' and len(self._get_empty_tiles()) > 0:
             self._fill_random_empty_tile()
@@ -284,21 +311,23 @@ class Game2048:
                 self._vertically_merge(False)
 
         self.end = not self._is_mergeable()
-        self._switch_player()
+        self.switch_player()
+
         changed = self.prev_board != self.board
-        self.prev_board = [i for i in self.board]
         # Fill an empty tile if this merge changes the game state
         if self.game_mode and changed:
             self._fill_random_empty_tile()
+            self.switch_player()
+
         return changed
 
-    def save_game_info(self):
+    def save_game_info(self, step=None, time_cost=None):
         """Save the game info we need for further statistics"""
         tiles = [item for sublist in self.board for item in sublist]
         best_tile = max(tiles)
         with open('{}.csv'.format(self.task_name), 'a', newline='\n') as f:
             writer = csv.writer(f)
-            writer.writerow([self.score, best_tile])
+            writer.writerow([self.score, best_tile, step, time_cost])
 
         return self.score, best_tile
 

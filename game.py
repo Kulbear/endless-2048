@@ -45,7 +45,7 @@ class Game2048:
     agent = 'Agent'
     computer = 'Computer'
 
-    def __init__(self, task_name='Default_Game', game_mode=True, upper_bound=20):
+    def __init__(self, task_name='Default_Game', game_mode=True, upper_bound=20, difficulty='simple'):
         assert upper_bound > 10
         self.row = 4
         self.col = 4
@@ -54,6 +54,7 @@ class Game2048:
         self.end = False
         self.task_name = task_name
         self.game_mode = game_mode
+        self.difficulty = difficulty
         self._moves = [0, 1, 2, 3]
         self._player_1 = Game2048.agent
         self._player_2 = Game2048.computer
@@ -94,6 +95,7 @@ class Game2048:
         new_game.prev_board = copy.deepcopy(self.prev_board)
         new_game.board = copy.deepcopy(self.board)
         new_game.game_mode = self.game_mode
+        new_game.difficulty = self.difficulty
         new_game.score = self.score
         new_game.end = self.end
         new_game.task_name = self.task_name
@@ -120,19 +122,8 @@ class Game2048:
         mapping = {str(2 ** power): str(2 ** power) for power in range(1, upper_bound)}
         return reduce(lambda x, y: dict(x, **y), ({'0': '0'}, mapping))
 
-    def _get_empty_tiles(self):
-        """Get coordinates of all empty tiles(in format of [col, row])"""
-        empty_tiles = []
-        for y in range(self.row):
-            for x in range(self.col):
-                if self._is_empty_tile(self.board[y][x]):
-                    empty_tiles.append([y, x])
-
-        return empty_tiles
-
     def empty_tiles(self):
         """Get coordinates of all empty tiles(in format of [col, row])"""
-        # TODO: this is identical to self._get_empty_tiles, refactor this
         empty_tiles = []
         for y in range(self.row):
             for x in range(self.col):
@@ -153,12 +144,19 @@ class Game2048:
 
     def _fill_random_empty_tile(self):
         """Randomly fill an empty tile with 2 or 4, prob 90% and 10%, respectively"""
-        empty_tiles = self._get_empty_tiles()
+        empty_tiles = self.empty_tiles()
         if empty_tiles:
             [i, j] = random.choice(empty_tiles)
-            # TODO: for simplicity, we only fill 2 now
-            # self.board[i][j] = 4 if random.random() > 0.9 else 2
-            self.board[i][j] = 2
+            self.board[i][j] = 4 if random.random() > 0.9 else 2
+
+    def fill_specific_empty_tile(self, tile):
+        """Fill the given tile"""
+        if tile:
+            i, j = tile
+            if self.difficulty == 'simple':
+                self.board[i][j] = 2
+            else:
+                self.board[i][j] = 4 if random.random() > 0.9 else 2
 
     def _is_mergeable(self):
         """Return whether there exists at least one pair of tiles is mergeable"""
@@ -291,13 +289,13 @@ class Game2048:
 
     def get_num_empty_tiles(self):
         """Get the number of empty tiles remain on the board"""
-        return len(self._get_empty_tiles())
+        return len(self.empty_tiles())
 
     def perform_move(self, move=None):
         """Perform a move on the game board"""
         self.prev_board = copy.deepcopy(self.board)
 
-        if self._active_player == 'Computer' and len(self._get_empty_tiles()) > 0:
+        if self._active_player == 'Computer' and len(self.empty_tiles()) > 0:
             self._fill_random_empty_tile()
         else:
             # 0 for LEFT, 1 for RIGHT, 2 for UP, 3 for DOWN

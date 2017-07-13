@@ -3,7 +3,7 @@ from agent import MinimaxAgent
 import time
 
 for i in range(100):
-    game = Game2048(task_name='minimax', game_mode=False)
+    game = Game2048(task_name='results/minimax', game_mode=False)
     m = MinimaxAgent()
     entire_start = time.time()
     start = time.time()

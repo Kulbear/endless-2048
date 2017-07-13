@@ -1,7 +1,7 @@
 from agent import base_agent
 
 MAX_TILE_CREDIT = 10e4
-MAX_DEPTH = 8  # 8 gives a 50% rate of achieving 2048 within half an hour
+MAX_DEPTH = 8  # 8 gives a >50% rate of achieving 2048 within half an hour
 WEIGHT_MATRIX = [
     [2048, 1024, 64, 32],
     [512, 128, 16, 2],
@@ -59,7 +59,7 @@ class MinimaxAgent(BaseAgent):
                 game_copy = game.copy()
                 # TODO: for simplicity here we only consider to fill 2
                 i, j = tile
-                game_copy.board[i][j] = 2
+                game_copy.fill_specific_empty_tile(tile)
                 # Switch player here
                 game_copy.switch_player()
                 v = min(v, self.search(game_copy, alpha, beta, depth + 1, max_depth))
@@ -95,7 +95,6 @@ class MinimaxAgent(BaseAgent):
             return -MAX_TILE_CREDIT
 
     def weighted_board(self, game):
-        # TODO: try numpy matrix?
         board = game.board
 
         result = 0

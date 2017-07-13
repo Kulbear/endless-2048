@@ -9,12 +9,18 @@ WEIGHT_MATRIX = [
     [4, 2, 1, 1]
 ]
 
-BaseAgent = base_agent.BaseAgent
 AGENT = 'Agent'
 
+class MinimaxAgent(base_agent.BaseAgent):
+    """A game agent pick the next move based on the result of a minimax search tree.
 
-class MinimaxAgent(BaseAgent):
+    A minimax algorithm is a recursive algorithm for choosing the next move in an n-player game, usually a two-player game.
+    Here, we implement a minimax algorithm with alpha-beta pruning alternative based on the pseudocode
+    from book Artificial Intelligence: A Modern Approach by Stuart Russell and Peter Norvig
+    """
+
     def get_move(self, game):
+        """Search the next optimal move by the iterative deepening technique"""
         available = game.moves_available()
         max_move = available[0] if available else None
         max_score = float('-inf')
@@ -30,6 +36,8 @@ class MinimaxAgent(BaseAgent):
         return max_move
 
     def search(self, game, alpha, beta, depth, max_depth):
+        """ The implementation of the minimax search with alpha-beta pruning"""
+        # Evaluate when possible
         if depth > max_depth or game.is_lost():
             return self.evaluate(game)
 
@@ -38,6 +46,7 @@ class MinimaxAgent(BaseAgent):
             moves = game.moves_available()
             result_move = moves[0]
             v = float('-inf')
+            # Go through all possible moves
             for m in moves:
                 game_copy = game.copy()
                 game_copy.perform_move(m)
@@ -48,7 +57,6 @@ class MinimaxAgent(BaseAgent):
                 if v >= beta:
                     return v
                 alpha = max(alpha, v)
-
             if depth == 1:
                 return result_move, v
             return v
@@ -57,8 +65,6 @@ class MinimaxAgent(BaseAgent):
             v = float('inf')
             for tile in available_tiles:
                 game_copy = game.copy()
-                # TODO: for simplicity here we only consider to fill 2
-                i, j = tile
                 game_copy.fill_specific_empty_tile(tile)
                 # Switch player here
                 game_copy.switch_player()
@@ -66,12 +72,12 @@ class MinimaxAgent(BaseAgent):
                 if v <= alpha:
                     return v
                 beta = min(beta, v)
-
             if depth == 1:
                 return '', v
             return v
 
     def evaluate(self, game):
+        """Evaluate the game board based on some pre-defined heuristic functions"""
         empty = self.empty_tiles(game)
         position = self.max_tile_position(game)
         weighted_sum = self.weighted_board(game)
@@ -82,9 +88,11 @@ class MinimaxAgent(BaseAgent):
         return empty + position + weighted_sum + smooth + mono
 
     def empty_tiles(self, game):
+        """Return the number of empty tiles on the game board"""
         return game.get_num_empty_tiles()
 
     def max_tile_position(self, game):
+        """Return an significantly large negative when the max tile is not on the desired corner, vice versa"""
         board = game.board
         max_tile = max(max(board, key=lambda x: max(x)))
 
@@ -95,6 +103,7 @@ class MinimaxAgent(BaseAgent):
             return -MAX_TILE_CREDIT
 
     def weighted_board(self, game):
+        """Perform point-wise product on the game board and a pre-defined weight matrix"""
         board = game.board
 
         result = 0
@@ -106,6 +115,7 @@ class MinimaxAgent(BaseAgent):
         return result
 
     def smoothness(self, game):
+        """Smoothness heuristic measures the difference between neighboring tiles and tries to minimize this count"""
         board = game.board
         smoothness = 0
 
@@ -121,6 +131,7 @@ class MinimaxAgent(BaseAgent):
         return smoothness
 
     def monotonicity(self, game):
+        """Monotonicity heuristic tries to ensure that the values of the tiles are all either increasing or decreasing along both the left/right and up/down directions"""
         board = game.board
         mono = 0
 

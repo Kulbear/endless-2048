@@ -1,5 +1,6 @@
 from random import choice
 
+
 class BaseAgent:
     def __init__(self, random_prob=0):
         self.random_prob = random_prob

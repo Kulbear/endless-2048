@@ -11,6 +11,7 @@ WEIGHT_MATRIX = [
 
 AGENT = 'Agent'
 
+
 class MinimaxAgent(base_agent.BaseAgent):
     """A game agent pick the next move based on the result of a minimax search tree.
 
@@ -18,6 +19,10 @@ class MinimaxAgent(base_agent.BaseAgent):
     Here, we implement a minimax algorithm with alpha-beta pruning alternative based on the pseudocode
     from book Artificial Intelligence: A Modern Approach by Stuart Russell and Peter Norvig
     """
+
+    def __init__(self, max_depth):
+        super().__init__()
+        self.max_depth = max_depth if max_depth else MAX_DEPTH
 
     def get_move(self, game):
         """Search the next optimal move by the iterative deepening technique"""
@@ -27,7 +32,7 @@ class MinimaxAgent(base_agent.BaseAgent):
 
         # TODO: do we really need iterative deepening or not?
         # Iterative deepening
-        for d in range(1, MAX_DEPTH):
+        for d in range(1, self.max_depth):
             move, score = self.search(game, float('-inf'), float('inf'), 1, d)
             if score > max_score:
                 max_score = score

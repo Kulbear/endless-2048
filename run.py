@@ -8,5 +8,5 @@ if __name__ == '__main__':
     ]
 
     for tester in testers:
-        tester.test_one_game()
-        tester.test_games()
+        # tester.test_one_game()
+        tester.test_games(iteration=10)

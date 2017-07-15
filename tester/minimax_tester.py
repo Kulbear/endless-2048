@@ -4,12 +4,34 @@ import time
 
 
 class MinimaxTester(BaseTester):
+    """The tester for Minimax Agents.
+
+    Parameters
+    ----------
+    verbose : bool
+        See attributes.
+    max_depth : int
+        See attributes.
+
+    Attributes
+    ----------
+    verbose : bool
+        If True, during the agent is running, game info will be printed out.
+        If False, nothing will be printed out.
+    result_path : string
+        Game result saving path.
+    max_depth : int
+        This int will be used as the maximum depth of the minimax search tree.
+    """
+
     def __init__(self, verbose=True, max_depth=8):
+        super().__init__()
         self.verbose = verbose
         self.max_depth = max_depth
         self.result_path = 'results/minimax'
 
     def test_one_game(self):
+        """Go through one game, played by a MinimaxAgent instance"""
         game = self.create_one_game()
         m = MinimaxAgent(max_depth=self.max_depth)
         entire_start = time.time()

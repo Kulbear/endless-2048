@@ -1,7 +1,7 @@
 from agent import base_agent
+from game import Game2048
 
 MAX_TILE_CREDIT = 10e4
-MAX_DEPTH = 8  # 8 gives a >50% rate of achieving 2048 within half an hour
 WEIGHT_MATRIX = [
     [2048, 1024, 64, 32],
     [512, 128, 16, 2],
@@ -9,7 +9,7 @@ WEIGHT_MATRIX = [
     [4, 2, 1, 1]
 ]
 
-AGENT = 'Agent'
+AGENT = Game2048.agent
 
 
 class MinimaxAgent(base_agent.BaseAgent):
@@ -18,11 +18,21 @@ class MinimaxAgent(base_agent.BaseAgent):
     A minimax algorithm is a recursive algorithm for choosing the next move in an n-player game, usually a two-player game.
     Here, we implement a minimax algorithm with alpha-beta pruning alternative based on the pseudocode
     from book Artificial Intelligence: A Modern Approach by Stuart Russell and Peter Norvig
+
+    Parameters
+    ----------
+    max_depth : int
+        This int will be used as the maximum depth of the minimax search tree.
+
+    Attributes
+    ----------
+    max_depth : int
+        Default 8.
     """
 
-    def __init__(self, max_depth):
+    def __init__(self, max_depth=8):  # 8 gives a >50% rate of achieving 2048 within half an hour
         super().__init__()
-        self.max_depth = max_depth if max_depth else MAX_DEPTH
+        self.max_depth = max_depth
 
     def get_move(self, game):
         """Search the next optimal move by the iterative deepening technique"""
@@ -41,7 +51,7 @@ class MinimaxAgent(base_agent.BaseAgent):
         return max_move
 
     def search(self, game, alpha, beta, depth, max_depth):
-        """ The implementation of the minimax search with alpha-beta pruning"""
+        """The implementation of the minimax search with alpha-beta pruning"""
         # Evaluate when possible
         if depth > max_depth or game.is_lost():
             return self.evaluate(game)
